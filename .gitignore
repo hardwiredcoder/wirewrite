@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/wirewrite
+wirewrite.so
+wirewrite.dylib
+wirewrite.dll
+libwirewrite.a
+wirewrite.a
+wirewrite.lib
+wirewrite-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
