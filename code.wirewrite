@@ -1,2 +1,4 @@
-!0 AND !1 println H;
-STOP;
+!31 AND !31 SET 1 1
+PRINTLN
+
+STOP

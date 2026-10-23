@@ -1,0 +1,12 @@
+abcdefghijklmnopqrstuvwxyz      26
+ABCDEFGHIJKLMNOPQRSTUVWXYZ      26  52
+1234567890                      10  62
+!@#$%^&*()                      10  72
+-+_`~<>,.?/:;"'{}[]|\           21  93
+
+
+To Do:
+-   use multiple conditional operators in the same line
+-   add more characters for printing to the terminal
+-   add terminal user input
+-
