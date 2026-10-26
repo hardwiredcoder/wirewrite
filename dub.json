@@ -1,9 +1,12 @@
 {
-	"description": "A minimal D application.",
-	"license": "MIT",
+	"description": "wirewrite is a programming language designed to make it feel like you're typing wires and gates, like an assembly language. It has a fake, binary memory that your wirewrite script uses to store values, recieve user input, and print to the terminal. The language isn't ideal and it's made to just to offer a challenge to programmers.",
+	"dependencies": {
+		"arsd-official:terminal": "~>12.1.2"
+	},
 	"authors": [
 		"Elijah S."
 	],
 	"copyright": "Copyright © 2026, Elijah S.",
+	"license": "MIT",
 	"name": "wirewrite"
 }

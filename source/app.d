@@ -1,22 +1,32 @@
 import std;
 import core.thread;
+import arsd.terminal;
 
-string printchars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-+_`~<>,.?/:;\"'{}[]|\\";
+bool[] memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+// this is the fake memory that wirewrite code uses
+
+string[] action;
+// each element that is added to this array is each word or argument (part) in a line
+
+string chars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-+_`~<>,.?/:;\"'{}[]|\\█▓▒░▔▕√©\n\t";
+// this is the character list that I created for the function PRINT, PRINTLN, and INPUT
+
+string[$] functionList = ["SET", "REPEAT", "STOP", "PRINT", "PRINTLN", "INPUT"];
+// im not gonna even explain this one. i think you already get it
 
 void main()
 {
-    bool[$] memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-    string code = readText("code.wirewrite");
+    string code = readText("code.wirewrite") ~ "\n";
+    // auto adds a new line because the interpreter will not work unless the file ends with an empty line for some reason
+    //
+    int column;
 
     string partSeparator;
 
-    string[] action;
-
-    int column;
-
     while (true)
     {
+        // the reason why there are two while loops is for the REPEAT function. Repeating requires breaking out of a loop so that the code can be reread as if the interpreter just started at line one
+
         column = 0;
         while (true)
         {
@@ -38,86 +48,156 @@ void main()
                 partSeparator = "";
             }
 
-
-            if (action[0] == "SET") { memory[to!int(action[1])] = to!bool(to!int(action[2])); }
-            else if (action[0] == "REPEAT") { break; }
-            else if (action[0] == "STOP") { return; }
-            else if (action[0] == "PRINT")
+            if (!(action.length == 0))
             {
-                write(printchars[(memory[0] * 1) + (memory[1] * 2) + (memory[2] * 4) + (memory[3] * 8) + (memory[4] * 16) + (memory[5] * 32) + (memory[6] * 64)]);
-            }
-            else if (action[0] == "PRINTLN")
-            {
-                writeln(printchars[(memory[0] * 1) + (memory[1] * 2) + (memory[2] * 4) + (memory[3] * 8) + (memory[4] * 16) + (memory[5] * 32) + (memory[6] * 64)]);
-            }
-
-            else if (action[1] == "SET" || action[1] == "REPEAT" || action[1] == "STOP" || action[1] == "PRINT" || action[1] == "PRINTLN")
-            {
-                if ((action[0])[0] == '!') { action[0] = chompPrefix(action[0], "!"); if (memory[to!int(action[0])] == 0) { action[0] = "1"; } else { action[0] = "0"; } }
-                else { if (memory[to!int(action[0])] == 0) { action[0] = "0"; } else { action[0] = "1"; } }
-
+                int functionCallPosition = 0;
+                while (functionCallPosition < action.length  &&  !functionList[].canFind(action[functionCallPosition]))
                 {
-                    string temp = functions(memory, action, 1);
-                    if (temp == "break") {break;}
-                    else if (temp == "return") {return;}
+                    functionCallPosition += 1;
                 }
-            }
-            else
-            {
-                // converts the two memory addresses to their value from the memory and will also handle if they have a not (!) symbol
 
-
-                // decides whether the condition is true or false
-
-                if (gates(action, 1))
+                if (functionCallPosition == 0)
                 {
+                    string temp = functions(0);
+
+                    if (temp == "break") { break; }
+                    else if (temp == "return") { return; }
+                }
+                else if (functionCallPosition == 1)
+                {
+                    giveActionValueByMemoryAddress(0);
+
+                    if (to!int(action[0]))
                     {
-                        string temp = functions(memory, action, 3);
-                        if (temp == "break") {break;}
-                        else if (temp == "return") {return;}
+                        string temp = functions(1);
+
+                        if (temp == "break") { break; }
+                        else if (temp == "return") { return; }
+                    }
+                }
+                else if (functionCallPosition > 2)
+                {
+                    int i = 0;
+                    while (i < functionCallPosition-2)
+                    {
+                        giveActionValueByMemoryAddress(i);
+                        giveActionValueByMemoryAddress(i+2);
+
+                        if (!gates(i+1)) { break; }
+
+                        i += 2;
+                    }
+
+                    if (!(i < functionCallPosition-2))
+                    {
+                        string temp = functions(functionCallPosition);
+
+                        if (temp == "break") { break; }
+                        else if (temp == "return") { return; }
                     }
                 }
             }
 
-            while (to!string(code[column]) == "\n") {column += 1;}
+            column += 1;
         }
     }
 }
 
-string functions(bool[] memory, string[] action, int functionPosition)
-{
-    if (action[functionPosition] == "SET") { memory[to!int(action[functionPosition + 1])] = to!bool(to!int(action[functionPosition + 2])); }
+string functions(int functionPosition)
+{   // this function contains all of the wirewrite functions. if you are creating your own, be sure to put the name in the "functionList" array at the top
+    if (action[functionPosition] == "SET")
+    {
+        while (memory.length <= to!int(action[functionPosition + 1]))
+        {
+            memory = memory ~ 0;
+        }
+        memory[to!int(action[functionPosition + 1])] = to!bool(to!int(action[functionPosition + 2]));
+    }
     else if (action[functionPosition] == "REPEAT") { return "break"; }
     else if (action[functionPosition] == "STOP") { return "return"; }
     else if (action[functionPosition] == "PRINT")
     {
-        write(printchars[(memory[0] * 1) + (memory[1] * 2) + (memory[2] * 4) + (memory[3] * 8) + (memory[4] * 16) + (memory[5] * 32) + (memory[6] * 64)]);
+        write(chars[(memory[0] * 1) + (memory[1] * 2) + (memory[2] * 4) + (memory[3] * 8) + (memory[4] * 16) + (memory[5] * 32) + (memory[6] * 64)]);
     }
     else if (action[functionPosition] == "PRINTLN")
     {
-        writeln(printchars[(memory[0] * 1) + (memory[1] * 2) + (memory[2] * 4) + (memory[3] * 8) + (memory[4] * 16) + (memory[5] * 32) + (memory[6] * 64)]);
+        writeln(chars[(memory[0] * 1) + (memory[1] * 2) + (memory[2] * 4) + (memory[3] * 8) + (memory[4] * 16) + (memory[5] * 32) + (memory[6] * 64)]);
+    }
+    else if (action[functionPosition] == "INPUT")
+    {
+        dchar key = RealTimeConsoleInput(new Terminal(ConsoleOutputType.linear), ConsoleInputFlags.raw).getch();
+        intToMemory(to!int(chars.countUntil(key)), 7);
     }
 
     return "";
 }
 
-bool gates(string[] action, int gatePosition)
-{
+void intToMemory(int number, int addressOfFirstSlot)
+{   // this will automatically convert integers to binary form and write it to the memory array
+    int[$] valueBySlot = [1, 2, 4, 8, 16, 32, 64, 128];
+
+    for (int i = 6; i >= 0; i--)
+    {
+        if (number >= valueBySlot[i])
+        {
+            memory[addressOfFirstSlot + i] = 1;
+
+            if (number != valueBySlot[i])
+            {
+                intToMemory(number - valueBySlot[i], addressOfFirstSlot);
+            }
+
+            return;
+        }
+    }
+}
+
+bool gates(int gatePosition)
+{   // these are logical gates that the wirewrite script can use
     if (action[gatePosition] == "AND") { if ( (to!int(action[gatePosition - 1]) == 1) && (to!int(action[gatePosition + 1]) == 1) ) {return true;} }
     else if (action[gatePosition] == "OR") { if ( ((to!int(action[gatePosition - 1])) == 1) || ( to!int(action[gatePosition + 1]) == 1) ) {return true;} }
     else if (action[gatePosition] == "NAND") { if (!( ((to!int(action[gatePosition - 1])) == 1) && ( to!int((action[gatePosition + 1])) == 1)) ) {return true;} }
     else if (action[gatePosition] == "NOR") { if ( ((to!int(action[gatePosition - 1])) == 0) && ( to!int((action[gatePosition + 1])) == 0) ) {return true;} }
     else if (action[gatePosition] == "XOR") { if ( (((to!int(action[gatePosition - 1])) == 1) || ( to!int(action[gatePosition + 1]) == 1)) && !(((to!int(action[gatePosition - 1])) == 1) && ( to!int(action[gatePosition + 1]) == 1)) ) {return true;} }
+    else if (action[gatePosition] == "NXOR") { if ( !((((to!int(action[gatePosition - 1])) == 1) || ( to!int(action[gatePosition + 1]) == 1)) && !(((to!int(action[gatePosition - 1])) == 1) && ( to!int(action[gatePosition + 1]) == 1))) ) {return true;} }
 
     return false;
 }
 
-void giveActionValueByMemoryAddress()
+void giveActionValueByMemoryAddress(int addressPosition)
 {
-    if ((action[0])[0] == '!') { action[0] = chompPrefix(action[0], "!"); if (memory[to!int(action[0])] == 0) { action[0] = "1"; } else { action[0] = "0"; } }
-    else { if (memory[to!int(action[0])] == 0) { action[0] = "0"; } else { action[0] = "1"; } }
-    if ((action[2])[0] == '!') { action[2] = chompPrefix(action[2], "!"); if (memory[to!int(action[2])] == 0) { action[2] = "1"; } else { action[2] = "0"; } }
-    else { if (memory[to!int(action[2])] == 0) {action[2] = "0";} else {action[2] = "1";}}
-}
+    if ((action[addressPosition])[0] == '!')
+    {
+        action[addressPosition] = chompPrefix(action[addressPosition], "!");
 
-// im working on the function giveActionValueByMemoryAddress
+        while (memory.length <= to!int(action[addressPosition]))
+        {
+            memory = memory ~ 0;
+        }
+
+        if (memory[to!int(action[addressPosition])] == 0)
+        {
+            action[addressPosition] = "1";
+        }
+        else
+        {
+            action[addressPosition] = "0";
+        }
+    }
+    else
+    {
+        while (memory.length <= to!int(action[addressPosition]))
+        {
+            memory = memory ~ 0;
+        }
+
+        if (memory[to!int(action[addressPosition])] == 0)
+        {
+            action[addressPosition] = "0";
+        }
+        else
+        {
+            action[addressPosition] = "1";
+        }
+    }
+}
