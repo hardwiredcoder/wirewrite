@@ -36,6 +36,8 @@ Memory After:
 ```
 
 Fake memory is the only type of variable in the language, so it's used to store data. This includes giving input to functions.
+<br></br>
+These diagrams are missing something important. The fake memory is not just 6 bits. Everytime a wirewrite program tries to write or read to a bit that's out of range, the range is just increased to reach that bit. So it actually has no limit, at least until your ***real*** memory can't handle it. It can slow things up the larger your fake memory is, so I don't recommend using some random large bit address for no reason. Try to use the smallest amount of bits and addresses that you can.
 <h2>Functions</h2>
 The only functions in wirewrite are the ones built-in to the interpreter. There are no custom functions unless someone mods the interpreter source code to their own version. Here are the ones of this version, currently:
 <br></br>
@@ -79,7 +81,7 @@ List of characters:
 ```
  abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-+_`~<>,.?/:;"'{}[]|\█▓▒░▔▕√©\n\t
 ```
-*the first one is a space. the last one is \t, which is a tab. the second to last one is \n, which is a newline*
+*the first one is a space. the last one is \t, which is a tab. the second to last one is \n, which is a new line*
 
 Example:
 3 would be "c"
@@ -151,4 +153,46 @@ PRINTLN
 REPEAT
 ```
 
-<h2>Gates & Conditions</h2>
+<h2>Conditions</h2>
+Most of the time, there's not really a reason to make a program without conditions, but it's especially the case in wirewrite. In wirewrite, there are no built-in arithmetic operations. In fact, there's not even any integers or floats, math and other "basic" things are up to whoever programs in wirewrite to build.
+<br></br>
+Conditions in wirewrite (can only) compare bits of the fake memory to whether their off or on. Conditions are used to check whether a function should be ran or not, whereas without condition(s) every function written in the program would run no matter what.
+<br></br>
+Here is a line of wirewrite code that will only run the PRINT function if the bit of address 4 is on:
+
+```
+4 PRINT
+```
+
+What if someone wants to run a function if the bit of address 4 is **off**? Add an exclamation mark before writing the bit address.
+
+```
+!4 PRINT
+```
+
+Remember that these conditions can be used for any function (SET, PRINT, PRINTLN, STOP, REPEAT).
+<h3>Logical gates</h3>
+Logical gates are used in conditions to compare multiple bits at the same time. A bit address is followed by the logical gate with another address directly after the gate. Here's an example of checking if both bit of address 6 and bit of address 7 is the same, if so it will turn off bit of address 67:
+
+```
+6 AND 7 SET 67 0
+```
+
+AND is just one logical gate. wirewrite has several others. Here's the full list of gates with what the gate does:
+
+```
+AND  -  are both bits on?
+OR   -  are either one of the bits on?
+NAND -  is the result anything but and?
+NOR  -  is the result anything but or?
+XOR  -  is one of the bits on, but the other bit is off?
+NXOR -  is the result anything but xor?
+```
+
+You can also give multiple bit addresses and multiple gates, like this:
+
+```
+0 AND 4 AND 2 SET 0 0
+```
+
+**Using multiple OR gates or using different types of gates at the same time might not work yet.**
